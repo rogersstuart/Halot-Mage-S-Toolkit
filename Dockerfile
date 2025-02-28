@@ -2,8 +2,8 @@
 FROM python:latest
 
 # Install necessary dependencies (git, curl for downloading files)
-RUN apt-get update && apt-get install -y git curl && rm -rf /var/lib/apt/lists/*
-RUN pip install requests
+RUN apt-get update && apt-get install -y git curl binwalk default-jre && rm -rf /var/lib/apt/lists/*
+RUN pip install requests ubi_reader
 
 # Set the working directory in the container
 WORKDIR /app
