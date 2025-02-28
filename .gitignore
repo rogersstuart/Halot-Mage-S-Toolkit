@@ -1,0 +1,14 @@
+# Created by venv; see https://docs.python.org/3/library/venv.html
+.vscode
+__pycache__
+build
+dist
+ftp
+Include
+Lib
+Scripts
+config.toml
+pyenv.cfg
+.git
+DockerDesktopInstaller.exe
+pyenv.cfg
