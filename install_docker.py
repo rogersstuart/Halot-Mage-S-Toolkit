@@ -5,6 +5,9 @@ import time
 import winreg as reg
 import sys
 import ctypes
+import inspect
+
+from yarg import get
 
 def is_admin():
     """ Check if the script is running as an administrator """
@@ -61,7 +64,7 @@ def install_wsl():
     print("WSL installation complete. Rebooting system to finalize installation.")
     subprocess.run(["shutdown", "/r", "/t", "5"], check=True)
 
-def install_docker():
+def install_docker(caller_script):
     # Check if the script has already run before by checking a registry value
     script_key = "DockerInstallScriptExecuted"
     has_ran = False
@@ -102,6 +105,8 @@ def install_docker():
         print("Installing Docker Desktop...")
         subprocess.run([installer_path, "install", "--quiet"], check=True)  # No need for --quiet, "install" is sufficient
         print("Docker Desktop installed.")
+        os.remove(installer_path)
+
         try:
             # Add user to docker-users group
             username = os.getlogin()
@@ -130,13 +135,10 @@ def install_docker():
         # Get the full path of the Python executable currently in use
         python_exe = sys.executable  # This gives you the exact path of the python interpreter
 
-        # Get the full path of the current script
-        script_path = os.path.abspath(__file__)
-
         # Create or open the registry key for startup
         try:
             registry_key = reg.OpenKey(reg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, reg.KEY_WRITE)
-            reg.SetValueEx(registry_key, "DockerInstallScript", 0, reg.REG_SZ, f'"{python_exe}" "{script_path}"')
+            reg.SetValueEx(registry_key, "DockerInstallScript", 0, reg.REG_SZ, f'{python_exe} {caller_script}')
             reg.CloseKey(registry_key)
             print("Script added to Windows startup successfully.")
         except Exception as e:
@@ -178,7 +180,12 @@ def install_docker():
         except Exception as e:
             print(f"Error unmarking script as executed in the registry: {e}")
 
-
+def get_caller_script():
+    """ Get the script that called the current function """
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back.f_back  # Go back two frames to get the caller
+    caller_script = caller_frame.f_globals["__file__"]
+    return os.path.abspath(caller_script)
     
 def begin():
     # Step 1: Request elevated permissions if not running as admin
@@ -190,7 +197,10 @@ def begin():
     try:
         if check_wsl_installed():
             # Step 3: Install Docker Desktop if not already done
-            install_docker()
+
+            caller_script = get_caller_script()
+            print(f"Caller script: {caller_script}")
+            install_docker(caller_script)
     except Exception as e:
         print(f"An error occurred: {e}")
         input("Press Enter to exit...")  # Keeps the console window open in case of an error

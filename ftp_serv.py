@@ -515,6 +515,9 @@ def main():
     print(sys.executable)
     install_docker.begin()
 
+    while True:
+        pass
+
     checkConfigFile()
 
     global config
