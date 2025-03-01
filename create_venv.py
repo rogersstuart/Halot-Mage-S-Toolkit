@@ -25,6 +25,28 @@ def install_requirements(venv_name, requirements_file):
     subprocess.run(activate_command, shell=True, check=True)
     print("Requirements installed.")
 
+def detect_shell():
+    """Detect the shell being used (PowerShell, CMD, or Linux shell)."""
+    if os.name == "nt":
+        parent_process = os.environ.get("COMSPEC", "").lower()
+        if "powershell" in parent_process:
+            return "powershell"
+        else:
+            return "cmd"
+    else:
+        return "linux"
+    
+def print_activation_command(shell, venv_name):
+    """Print the command to activate the virtual environment based on the shell."""
+    if shell == "powershell":
+        activate_command = f".\\{venv_name}\\Scripts\\Activate.ps1"
+    elif shell == "cmd":
+        activate_command = f"{venv_name}\\Scripts\\activate.bat"
+    else:  # Linux shell
+        activate_command = f"source {venv_name}/bin/activate"
+
+    print(f"To activate the virtual environment, run the following command:\n{activate_command}")
+
 def main():
     current_dir = os.path.basename(os.getcwd())
     venv_name = current_dir  # Use the current directory name as the virtual environment name
@@ -32,6 +54,9 @@ def main():
 
     create_virtualenv(venv_name)
     install_requirements(venv_name, requirements_file)
+
+    shell = detect_shell()
+    print_activation_command(shell, venv_name)
 
 if __name__ == "__main__":
     main()
