@@ -40,7 +40,6 @@ psutil==7.0.0
 pycryptodome_test_vectors==1.0.20
 pygraphviz==1.14
 pylsl==1.17.6
-pyodide==0.0.2
 PyOpenGL==3.1.9
 pyOpenSSL==25.0.0
 pypemicro==0.1.11
