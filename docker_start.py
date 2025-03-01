@@ -4,7 +4,7 @@ import winreg as reg
 import ctypes
 import os
 
-IMAGE_NAME = "my-python-app"
+IMAGE_NAME = "generate-firmware"
 DOCKERFILE_DIR = os.path.dirname(os.path.abspath(__file__))  # Directory where the Dockerfile is located
 
 def is_admin():
@@ -111,9 +111,11 @@ def begin():
         sys.exit()  # Exit the current non-elevated script after relaunching with elevated permissions
     try:
         remove_old_containers()
-        #clean_docker_system()
+        clean_docker_system()
         rebuild_docker()
         run_docker()
+        remove_old_containers()
+        clean_docker_system()
     except Exception as e:
         print(f"An error occurred: {e}")
         

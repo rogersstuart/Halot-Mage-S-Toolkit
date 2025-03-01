@@ -139,7 +139,7 @@ def run_build_script():
         # Make sure the script is executable
         os.chmod(build_script, 0o755)
         os.chmod(automated_build_script, 0o755)
-        run_command_output(f"expect {automated_build_script} {scripts_dir}")
+        run_command(f"expect {automated_build_script} {scripts_dir}")
         print("Build complete")
     else:
         print(f"Error: {build_script} not found")
@@ -172,16 +172,16 @@ if __name__ == "__main__":
     clone_repository(REPO_URL, REPO_DIR)
 
     # List extracted files
-    print("\nExtracted Firmware Files:")
-    for root, dirs, files in os.walk(FIRMWARE_DIR):
-        for file in files:
-            print(os.path.join(root, file))
+    #print("\nExtracted Firmware Files:")
+    #for root, dirs, files in os.walk(FIRMWARE_DIR):
+    #    for file in files:
+    #        print(os.path.join(root, file))
 
     # List cloned repository contents
-    print("\nCloned Repository Files:")
-    for root, dirs, files in os.walk(REPO_DIR):
-        for file in files:
-            print(os.path.join(root, file))
+    #print("\nCloned Repository Files:")
+    #for root, dirs, files in os.walk(REPO_DIR):
+    #    for file in files:
+    #        print(os.path.join(root, file))
 
     # Copy files and run extract.sh
     copy_and_extract()
