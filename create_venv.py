@@ -58,7 +58,7 @@ def main():
     install_requirements(venv_name, requirements_file)
 
     shell = detect_shell()
-    print_activation_command(shell, venv_name)
+    activate_virtualenv(shell)
 
 if __name__ == "__main__":
     main()
