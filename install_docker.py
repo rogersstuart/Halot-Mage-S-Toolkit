@@ -90,7 +90,7 @@ def install_wsl():
             print(f"Error marking script as executed in the registry: {e}")
 
 
-    #subprocess.run(["shutdown", "/r", "/t", "5"], check=True)
+    subprocess.run(["shutdown", "/r", "/t", "5"], check=True)
 
 def install_docker(caller_script):
     # Check if the script has already run before by checking a registry value
