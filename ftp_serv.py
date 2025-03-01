@@ -31,6 +31,7 @@ from watchdog.events import FileSystemEventHandler
 import webbrowser
 import toml
 
+import docker_start
 import get_token
 import install_docker
 
@@ -514,6 +515,7 @@ def main():
 
     print(sys.executable)
     install_docker.begin()
+    docker_start.begin()
 
     while True:
         pass

@@ -103,7 +103,7 @@ def install_docker(caller_script):
 
         # Install Docker Desktop silently
         print("Installing Docker Desktop...")
-        subprocess.run([installer_path, "install", "--quiet"], check=True)  # No need for --quiet, "install" is sufficient
+        subprocess.run([installer_path, "install", "--quiet", "--accept-license"], check=True)  # No need for --quiet, "install" is sufficient
         print("Docker Desktop installed.")
         os.remove(installer_path)
 
@@ -180,6 +180,8 @@ def install_docker(caller_script):
         except Exception as e:
             print(f"Error unmarking script as executed in the registry: {e}")
 
+        start_docker_desktop()
+
 def get_caller_script():
     """ Get the script that called the current function """
     frame = inspect.currentframe()
@@ -187,6 +189,17 @@ def get_caller_script():
     caller_script = caller_frame.f_globals["__file__"]
     return os.path.abspath(caller_script)
     
+def start_docker_desktop():
+    docker_desktop_path = r"C:\Program Files\Docker\Docker\Docker Desktop.exe"
+
+    if os.path.exists(docker_desktop_path):
+        print("Starting Docker Desktop...")
+        subprocess.Popen([docker_desktop_path])
+        time.sleep(30)  # Wait for Docker Desktop to start
+        print("Docker Desktop started.")
+    else:
+        print(f"Docker Desktop not found at {docker_desktop_path}")
+
 def begin():
     # Step 1: Request elevated permissions if not running as admin
     if not is_admin():

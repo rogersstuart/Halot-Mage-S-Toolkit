@@ -5,6 +5,7 @@ import ctypes
 import os
 
 IMAGE_NAME = "my-python-app"
+DOCKERFILE_DIR = os.path.dirname(os.path.abspath(__file__))  # Directory where the Dockerfile is located
 
 def is_admin():
     """ Check if the script is running as an administrator """
@@ -34,7 +35,7 @@ def run_as_admin():
 
 def run_command(command):
     """Run a shell command and stream output in real time."""
-    process = subprocess.Popen(command, shell=True, stdout=sys.stdout, stderr=sys.stderr, text=True)
+    process = subprocess.Popen(command, shell=True, stdout=sys.stdout, stderr=sys.stderr, text=True, cwd=DOCKERFILE_DIR)
     process.communicate()
 
     if process.returncode != 0:
@@ -42,7 +43,7 @@ def run_command(command):
 
 def run_command_output(command):
     """Run a shell command and stream output in real-time."""
-    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=DOCKERFILE_DIR)
     stdout, stderr = process.communicate()
 
     if process.returncode != 0:
@@ -97,16 +98,26 @@ def run_docker():
     os.makedirs(host_output_dir, exist_ok=True)
     run_command(f'docker run -v "{host_output_dir}:/app/output" -it {IMAGE_NAME}')
 
-if __name__ == "__main__":
+def clean_docker_system():
+    """Clean up Docker system to remove unused data."""
+    print("Cleaning up Docker system...")
+    run_command("docker system prune -a --volumes -f")
+    print("Docker system cleanup complete.")
+
+def begin():
     if not is_admin():
         print("This script requires administrator privileges. Relaunching with elevated permissions...")
         run_as_admin()
         sys.exit()  # Exit the current non-elevated script after relaunching with elevated permissions
     try:
         remove_old_containers()
+        clean_docker_system()
         rebuild_docker()
         run_docker()
     except Exception as e:
         print(f"An error occurred: {e}")
         
     input("Press Enter to exit...")  # Keeps the console window open in case of an error
+
+if __name__ == "__main__":
+    begin()
