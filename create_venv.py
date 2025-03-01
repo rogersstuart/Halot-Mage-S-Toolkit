@@ -36,8 +36,8 @@ def detect_shell():
     else:
         return "linux"
     
-def activate_virtualenv(shell):
-    """Activate the virtual environment based on the shell."""
+def print_activation_command(shell, venv_name):
+    """Print the command to activate the virtual environment based on the shell."""
     if shell == "powershell":
         activate_command = f".\\Scripts\\Activate.ps1"
     elif shell == "cmd":
@@ -45,9 +45,7 @@ def activate_virtualenv(shell):
     else:  # Linux shell
         activate_command = f"source bin/activate"
 
-    print(f"Activating virtual environment using {activate_command}...")
-    subprocess.run(activate_command, shell=True, check=True)
-    print("Virtual environment activated.")
+    print(f"To activate the virtual environment, run the following command:\n{activate_command}")
 
 def main():
     current_dir = os.path.basename(os.getcwd())
@@ -58,7 +56,7 @@ def main():
     install_requirements(venv_name, requirements_file)
 
     shell = detect_shell()
-    activate_virtualenv(shell)
+    print_activation_command(shell, venv_name)
 
 if __name__ == "__main__":
     main()
