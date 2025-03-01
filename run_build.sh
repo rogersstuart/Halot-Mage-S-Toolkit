@@ -12,7 +12,7 @@ cd $scripts_dir
 spawn ./build.sh
 
 expect {
-    -re ".*:" {
+    -re ".*:\n" {
         puts "Prompt detected, sending 'y'"
         send "y\r"
         exp_continue

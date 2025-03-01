@@ -111,7 +111,7 @@ def begin():
         sys.exit()  # Exit the current non-elevated script after relaunching with elevated permissions
     try:
         remove_old_containers()
-        clean_docker_system()
+        #clean_docker_system()
         rebuild_docker()
         run_docker()
     except Exception as e:
