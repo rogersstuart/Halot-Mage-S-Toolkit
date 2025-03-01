@@ -48,12 +48,9 @@ def check_wsl_installed():
             print("WSL 2 set as default version.")
         else:
             print("WSL 2 is already the default version.")
-    except FileNotFoundError:
+    except Exception as e:
         print("WSL is not installed. Installing WSL...")
         install_wsl()
-    except subprocess.CalledProcessError as e:
-        print(f"Error checking WSL installation: {e}")
-        return False
 
     return True
 
