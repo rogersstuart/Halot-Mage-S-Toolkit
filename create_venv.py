@@ -13,10 +13,16 @@ def create_virtualenv(venv_name):
 
 def install_requirements(venv_name, requirements_file):
     """Install requirements in the virtual environment."""
-    pip_executable = os.path.join("Scripts", "pip.exe") if os.name == "nt" else os.path.join("bin", "pip")
-    print(pip_executable)
-    print(f"Installing requirements from {requirements_file}...")
-    subprocess.run([pip_executable, "install", "-r", requirements_file], check=True)
+    if os.name == "nt":
+        activate_script = os.path.join("Scripts", "activate.bat")
+        pip_executable = os.path.join("Scripts", "pip.exe")
+    else:
+        activate_script = os.path.join("bin", "activate")
+        pip_executable = os.path.join("bin", "pip")
+
+    print(f"Activating virtual environment using {activate_script}...")
+    activate_command = f"{activate_script} && {pip_executable} install -r {requirements_file}"
+    subprocess.run(activate_command, shell=True, check=True)
     print("Requirements installed.")
 
 def main():
