@@ -36,7 +36,7 @@ def run_as_admin():
         subprocess.run(["powershell", "-Command", f"Start-Process '{pypath}' '{script}' -Verb runAs"])
 
 
-def check_wsl_installed():
+def check_wsl_installed(caller_script):
     """ Check if WSL is installed and WSL 2 is set as default """
     try:
         # Check if WSL is installed and verify the version
@@ -50,11 +50,11 @@ def check_wsl_installed():
             print("WSL 2 is already the default version.")
     except Exception as e:
         print("WSL is not installed. Installing WSL...")
-        install_wsl()
+        install_wsl(caller_script)
 
     return True
 
-def install_wsl():
+def install_wsl(caller_script):
     script_key = "WSLInstallScriptExecuted"
     has_ran = False
 
@@ -80,14 +80,14 @@ def install_wsl():
         print(f"Error adding script to Windows startup: {e}")
 
      # Now that the script has run, add a registry entry to mark that it has executed
-        print("Marking the script as executed in the registry...")
-        try:
-            registry_key = reg.OpenKey(reg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, reg.KEY_WRITE)
-            reg.SetValueEx(registry_key, script_key, 0, reg.REG_SZ, "Executed")
-            reg.CloseKey(registry_key)
-            print("Script marked as executed.")
-        except Exception as e:
-            print(f"Error marking script as executed in the registry: {e}")
+    print("Marking the script as executed in the registry...")
+    try:
+        registry_key = reg.OpenKey(reg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, reg.KEY_WRITE)
+        reg.SetValueEx(registry_key, script_key, 0, reg.REG_SZ, "Executed")
+        reg.CloseKey(registry_key)
+        print("Script marked as executed.")
+    except Exception as e:
+        print(f"Error marking script as executed in the registry: {e}")
 
 
     subprocess.run(["shutdown", "/r", "/t", "5"], check=True)
@@ -274,14 +274,16 @@ def begin():
             # This means the registry key doesn't exist, so the script hasn't run before
             pass
 
+        caller_script = get_caller_script()
+        print(f"Caller script: {caller_script}")
+
         if has_ran:
             remove_startup_registry_entry_wsl()
 
-        if has_ran or check_wsl_installed():
+        if has_ran or check_wsl_installed(caller_script):
             # Step 3: Install Docker Desktop if not already done
 
-            caller_script = get_caller_script()
-            print(f"Caller script: {caller_script}")
+            
             install_docker(caller_script)
 
     except Exception as e:
