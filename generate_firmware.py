@@ -10,11 +10,7 @@ import ctypes
 import inspect
 
 def get_caller_script():
-    """ Get the script that called the current function """
-    frame = inspect.currentframe()
-    caller_frame = frame.f_back.f_back  # Go back two frames to get the caller
-    caller_script = caller_frame.f_globals["__file__"]
-    return os.path.abspath(caller_script)
+    return os.path.abspath(__file__)
 
 def main():
     install_docker.begin()
