@@ -46,10 +46,12 @@ def run_as_admin():
 def run_command(command):
     """Run a shell command and stream output in real time."""
     process = subprocess.Popen(command, shell=True, stdout=sys.stdout, stderr=sys.stderr, text=True, cwd=DOCKERFILE_DIR)
-    process.communicate()
+    stdout, stderr = process.communicate()
 
     if process.returncode != 0:
         print(f"Error: Command failed with exit code {process.returncode}", file=sys.stderr)
+        print(stderr, file=sys.stderr)
+        raise Exception(f"Error: Command failed with exit code {process.returncode}")
 
 def run_command_output(command):
     """Run a shell command and stream output in real-time."""
@@ -59,6 +61,8 @@ def run_command_output(command):
     if process.returncode != 0:
         print(f"Error: Command failed with exit code {process.returncode}", file=sys.stderr)
         print(stderr, file=sys.stderr)
+        raise Exception(f"Error: Command failed with exit code {process.returncode}")
+    
     return stdout.strip()
 
 def remove_old_containers():

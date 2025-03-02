@@ -69,7 +69,7 @@ async def simulate_printing():
     print("Printing completed.")
 
 # Mock WebSocket Server
-async def mock_websocket_handler(websocket, path):
+async def mock_websocket_handler(websocket):
     global printing_status
     async for message in websocket:
         print(f"Received message: {message}")
@@ -82,7 +82,7 @@ async def mock_websocket_handler(websocket, path):
                 'sliceLayerCount': 100,
                 'curSliceLayer': 0
             }
-            response = {'status': 'ok'}
+            response = printing_status
             pause_event.set()  # Resume if paused
             asyncio.create_task(simulate_printing())
         elif data['cmd'] == 'GET_PRINT_STATUS':
@@ -95,9 +95,11 @@ async def mock_websocket_handler(websocket, path):
             printing_status['printStatus'] = 'PRINT_STOPPED'
             pause_event.set()  # Ensure the printing process can stop
             response = {'status': 'stopped'}
-
-        await websocket.send(json.dumps(response))
-        print(f"Sent response: {json.dumps(response)}")
+        if json.dumps(response) != "{}":
+            await websocket.send(json.dumps(response))
+            print(f"Sent response: {json.dumps(response)}")
+        else:
+            print("No response sent")
 
 # Setup FTP Server
 def setup_ftp_server():
