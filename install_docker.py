@@ -6,6 +6,7 @@ import winreg as reg
 import sys
 import ctypes
 import inspect
+import psutil
 
 from yarg import get
 
@@ -54,6 +55,23 @@ def check_wsl_installed(caller_script):
 
     return True
 
+def monitor_process(proc):
+    """ Monitor CPU, memory usage, and subprocesses of the given process """
+    try:
+        parent = psutil.Process(proc.pid)
+        while proc.poll() is None:  # While process is running
+            cpu_usage = parent.cpu_percent(interval=1)
+            mem_usage = parent.memory_info().rss / (1024 * 1024)  # Convert to MB
+            children = parent.children(recursive=True)  # Get subprocesses
+            
+            print(f"[Monitoring] CPU: {cpu_usage:.2f}% | Memory: {mem_usage:.2f}MB | Subprocesses: {len(children)}")
+            
+            for child in children:
+                print(f"  ├── PID {child.pid}: {child.name()}")
+
+    except psutil.NoSuchProcess:
+        print("[Monitoring] Process ended.")
+
 def enable_wsl_features():
     commands = [
         "dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart /LogLevel:4",
@@ -64,10 +82,17 @@ def enable_wsl_features():
     for cmd in commands:
         print(f"Executing: {cmd}")
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        stdout, stderr = process.communicate()
-        print(stdout)
-        if stderr:
-            print("Error:", stderr)
+
+        # Start monitoring in parallel
+        monitor_process(process)
+
+        # Capture and print real-time output
+        for line in iter(process.stdout.readline, ''):
+            print(line, end='')
+
+        stderr_output = process.stderr.read()
+        if stderr_output:
+            print("\nError:", stderr_output)
 
 
 
