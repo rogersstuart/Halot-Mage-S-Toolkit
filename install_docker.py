@@ -54,6 +54,20 @@ def check_wsl_installed(caller_script):
 
     return True
 
+def enable_wsl_features():
+    commands = [
+        "dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart",
+        "dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart"
+    ]
+    
+    for cmd in commands:
+        print(f"Executing: {cmd}")
+        process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        print(process.stdout)
+        if process.stderr:
+            print("Error:", process.stderr)
+
+
 def install_wsl(caller_script):
     script_key = "WSLInstallScriptExecuted"
     has_ran = False
@@ -61,7 +75,8 @@ def install_wsl(caller_script):
 
     """ Install WSL and set it to version 2 """
     print("Enabling Windows Subsystem for Linux (WSL) and Virtual Machine Platform...")
-    subprocess.run(["powershell", "wsl --install"], check=True)
+    #subprocess.run(["powershell", "wsl --install"], check=True)
+    enable_wsl_features()
     print("WSL installation complete. Rebooting system to finalize installation.")
 
     # Add the script to the startup registry key
