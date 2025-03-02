@@ -55,19 +55,34 @@ def check_wsl_installed(caller_script):
 
     return True
 
-def monitor_process(proc):
-    """ Monitor CPU, memory usage, and subprocesses of the given process """
+def monitor_windows_modules_installer():
+    """ Monitor the Windows Modules Installer Worker (TiWorker.exe) """
     try:
-        parent = psutil.Process(proc.pid)
-        while proc.poll() is None:  # While process is running
-            cpu_usage = parent.cpu_percent(interval=1)
-            mem_usage = parent.memory_info().rss / (1024 * 1024)  # Convert to MB
-            children = parent.children(recursive=True)  # Get subprocesses
-            
-            sys.stdout.write(f"\r[Monitoring] CPU: {cpu_usage:.2f}% | Memory: {mem_usage:.2f}MB | Subprocesses: {len(children)}   ")
+        # Find the process ID of the TiWorker.exe process
+        tiworker_process = None
+        for proc in psutil.process_iter(attrs=['pid', 'name']):
+            if proc.info['name'].lower() == 'tiworker.exe':
+                tiworker_process = proc
+                break
+        
+        if not tiworker_process:
+            sys.stdout.write("\n[Monitoring] TiWorker.exe not found.\n")
             sys.stdout.flush()
+            return
+
+        # Monitor the CPU and memory usage of TiWorker.exe
+        while tiworker_process.is_running():
+            cpu_usage = tiworker_process.cpu_percent(interval=1)
+            mem_usage = tiworker_process.memory_info().rss / (1024 * 1024)  # Convert to MB
+            children = tiworker_process.children(recursive=True)  # Get subprocesses
+
+            # Update monitoring output for TiWorker.exe
+            sys.stdout.write(f"\r[Monitoring TiWorker] CPU: {cpu_usage:.2f}% | Memory: {mem_usage:.2f}MB | Subprocesses: {len(children)}   ")
+            sys.stdout.flush()
+            time.sleep(1)
+
     except psutil.NoSuchProcess:
-        sys.stdout.write("\n[Monitoring] Process ended.\n")
+        sys.stdout.write("\n[Monitoring] TiWorker.exe process ended.\n")
         sys.stdout.flush()
 
 def enable_wsl_features():
@@ -79,15 +94,18 @@ def enable_wsl_features():
         print(f"Executing: {cmd}")
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         
-        # Start monitoring in parallel
-        monitor_process(process)
-        
+        # Start monitoring TiWorker.exe in a separate thread
+        monitor_thread = threading.Thread(target=monitor_windows_modules_installer)
+        monitor_thread.daemon = True
+        monitor_thread.start()
+
+        # Handle subprocess output while TiWorker.exe is running
         while True:
             output = process.stdout.readline()
             if output == "" and process.poll() is not None:
                 break
             if output:
-                sys.stdout.write(f"\r{output.strip()}   ")  # Overwrites previous line
+                sys.stdout.write(f"\r{output.strip()}   ")  # Overwrites the current output line with subprocess stdout
                 sys.stdout.flush()
         
         stderr_output = process.stderr.read()
