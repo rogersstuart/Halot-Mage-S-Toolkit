@@ -6,8 +6,6 @@ import winreg as reg
 import sys
 import ctypes
 import inspect
-import psutil
-import threading
 
 from yarg import get
 
@@ -56,64 +54,6 @@ def check_wsl_installed(caller_script):
 
     return True
 
-def monitor_windows_modules_installer():
-    """ Monitor the Windows Modules Installer Worker (TiWorker.exe) """
-    try:
-        # Find the process ID of the TiWorker.exe process
-        tiworker_process = None
-        for proc in psutil.process_iter(attrs=['pid', 'name']):
-            if proc.info['name'].lower() == 'tiworker.exe':
-                tiworker_process = proc
-                break
-        
-        if not tiworker_process:
-            sys.stdout.write("\n[Monitoring] TiWorker.exe not found.\n")
-            sys.stdout.flush()
-            return
-
-        # Monitor the CPU and memory usage of TiWorker.exe
-        while tiworker_process.is_running():
-            cpu_usage = tiworker_process.cpu_percent(interval=1)
-            mem_usage = tiworker_process.memory_info().rss / (1024 * 1024)  # Convert to MB
-            children = tiworker_process.children(recursive=True)  # Get subprocesses
-
-            # Update monitoring output for TiWorker.exe
-            sys.stdout.write(f"\r[Monitoring TiWorker] CPU: {cpu_usage:.2f}% | Memory: {mem_usage:.2f}MB | Subprocesses: {len(children)}   ")
-            sys.stdout.flush()
-            time.sleep(1)
-
-    except psutil.NoSuchProcess:
-        sys.stdout.write("\n[Monitoring] TiWorker.exe process ended.\n")
-        sys.stdout.flush()
-
-def enable_wsl_features():
-    commands = [
-        "wsl --install"
-    ]
-    
-    for cmd in commands:
-        print(f"Executing: {cmd}")
-        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        
-        # Start monitoring TiWorker.exe in a separate thread
-        monitor_thread = threading.Thread(target=monitor_windows_modules_installer)
-        monitor_thread.daemon = True
-        monitor_thread.start()
-
-        # Handle subprocess output while TiWorker.exe is running
-        while True:
-            output = process.stdout.readline()
-            if output == "" and process.poll() is not None:
-                break
-            if output:
-                sys.stdout.write(f"\r{output.strip()}   ")  # Overwrites the current output line with subprocess stdout
-                sys.stdout.flush()
-        
-        stderr_output = process.stderr.read()
-        if stderr_output:
-            print("\nError:", stderr_output)
-
-
 def install_wsl(caller_script):
     script_key = "WSLInstallScriptExecuted"
     has_ran = False
@@ -121,8 +61,7 @@ def install_wsl(caller_script):
 
     """ Install WSL and set it to version 2 """
     print("Enabling Windows Subsystem for Linux (WSL) and Virtual Machine Platform...")
-    #subprocess.run(["powershell", "wsl --install"], check=True)
-    enable_wsl_features()
+    subprocess.run(["powershell", "wsl --install"], check=True)
     print("WSL installation complete. Rebooting system to finalize installation.")
 
     # Add the script to the startup registry key
@@ -341,13 +280,11 @@ def begin():
         if has_ran:
             remove_startup_registry_entry_wsl()
 
-        if has_ran == True:
+        if has_ran or check_wsl_installed(caller_script):
             # Step 3: Install Docker Desktop if not already done
 
             
             install_docker(caller_script)
-        else:
-             install_wsl(caller_script)
 
     except Exception as e:
         print(f"An error occurred: {e}")
