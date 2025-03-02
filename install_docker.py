@@ -64,36 +64,37 @@ def monitor_process(proc):
             mem_usage = parent.memory_info().rss / (1024 * 1024)  # Convert to MB
             children = parent.children(recursive=True)  # Get subprocesses
             
-            print(f"[Monitoring] CPU: {cpu_usage:.2f}% | Memory: {mem_usage:.2f}MB | Subprocesses: {len(children)}")
-            
-            for child in children:
-                print(f"  ├── PID {child.pid}: {child.name()}")
-
+            sys.stdout.write(f"\r[Monitoring] CPU: {cpu_usage:.2f}% | Memory: {mem_usage:.2f}MB | Subprocesses: {len(children)}   ")
+            sys.stdout.flush()
     except psutil.NoSuchProcess:
-        print("[Monitoring] Process ended.")
+        sys.stdout.write("\n[Monitoring] Process ended.\n")
+        sys.stdout.flush()
 
 def enable_wsl_features():
     commands = [
         "dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart /LogLevel:4",
-        "dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart /LogLevel:4",
+        "dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart /LogLevel:4"
         "wsl --update"
     ]
     
     for cmd in commands:
         print(f"Executing: {cmd}")
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
+        
         # Start monitoring in parallel
         monitor_process(process)
-
-        # Capture and print real-time output
-        for line in iter(process.stdout.readline, ''):
-            print(line, end='')
-
+        
+        while True:
+            output = process.stdout.readline()
+            if output == "" and process.poll() is not None:
+                break
+            if output:
+                sys.stdout.write(f"\r{output.strip()}   ")  # Overwrites previous line
+                sys.stdout.flush()
+        
         stderr_output = process.stderr.read()
         if stderr_output:
             print("\nError:", stderr_output)
-
 
 
 def install_wsl(caller_script):
