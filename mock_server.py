@@ -94,7 +94,7 @@ async def mock_websocket_handler(websocket):
         elif data['cmd'] == 'PRINT_STOP':
             printing_status['printStatus'] = 'PRINT_STOPPED'
             pause_event.set()  # Ensure the printing process can stop
-            response = {'status': 'stopped'}
+            response = {'status': 'IDLE'}
         if json.dumps(response) != "{}":
             await websocket.send(json.dumps(response))
             print(f"Sent response: {json.dumps(response)}")
