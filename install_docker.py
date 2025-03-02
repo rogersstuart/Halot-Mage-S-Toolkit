@@ -298,11 +298,13 @@ def begin():
         if has_ran:
             remove_startup_registry_entry_wsl()
 
-        if has_ran or check_wsl_installed(caller_script):
+        if has_ran == True:
             # Step 3: Install Docker Desktop if not already done
 
             
             install_docker(caller_script)
+        else:
+             install_wsl(caller_script)
 
     except Exception as e:
         print(f"An error occurred: {e}")
