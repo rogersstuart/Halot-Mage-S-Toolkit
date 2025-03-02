@@ -54,6 +54,23 @@ def check_wsl_installed(caller_script):
 
     return True
 
+def run_command_output(command):
+    """Run a shell command and stream output in real-time."""
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    
+    while True:
+        output = process.stdout.readline()
+        if output == '' and process.poll() is not None:
+            break
+        if output:
+            print(output.strip())
+    
+    stderr = process.stderr.read()
+    if process.returncode != 0:
+        print(f"Error: Command failed with exit code {process.returncode}", file=sys.stderr)
+        print(stderr, file=sys.stderr)
+    return process.returncode
+
 def enable_wsl_features():
     commands = [
         "wsl --install"
@@ -61,19 +78,7 @@ def enable_wsl_features():
     
     for cmd in commands:
         print(f"Executing: {cmd}")
-        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
-        while True:
-            output = process.stdout.readline()
-            if output == "" and process.poll() is not None:
-                break
-            if output:
-                sys.stdout.write(f"\r{output.strip()}   ")  # Overwrites the current output line with subprocess stdout
-                sys.stdout.flush()
-        
-        stderr_output = process.stderr.read()
-        if stderr_output:
-            print("\nError:", stderr_output)
+        run_command_output(cmd)
 
 def install_wsl(caller_script):
     script_key = "WSLInstallScriptExecuted"
