@@ -57,8 +57,15 @@ def check_wsl_installed(caller_script):
 
 def clear_monitor_area():
     """ Clears only the lines that are used by the monitor process """
-    sys.stdout.write("\033[K")  # Clear the current line
-    sys.stdout.flush()
+    if os.name == 'nt':  # If running on Windows (cmd or PowerShell)
+        if sys.stdout.isatty():  # Check if output is a terminal
+            # In cmd, we can only overwrite the current line
+            sys.stdout.write("\r" + " " * 100)  # Clear the line with spaces
+            sys.stdout.write("\r")  # Move the cursor to the start of the line
+            sys.stdout.flush()
+    else:
+        sys.stdout.write("\033[K")  # For non-Windows (supports ANSI)
+        sys.stdout.flush()
 
 def monitor_process(proc):
     """ Monitor CPU, memory usage, and subprocesses of the given process """
@@ -92,7 +99,7 @@ def monitor_process(proc):
     except psutil.NoSuchProcess:
         sys.stdout.write("\n[Monitoring] Process ended.\n")
         sys.stdout.flush()
-        
+
 def enable_wsl_features():
     commands = [
         "wsl --install"
