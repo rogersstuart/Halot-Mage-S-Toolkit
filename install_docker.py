@@ -54,6 +54,34 @@ def check_wsl_installed(caller_script):
 
     return True
 
+def enable_wsl_features():
+    commands = [
+        "wsl --install"
+    ]
+    
+    for cmd in commands:
+        print(f"Executing: {cmd}")
+        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        
+        # Start monitoring in parallel
+        # Start monitoring process in the background
+        import threading
+        monitor_thread = threading.Thread(target=monitor_process, args=(process,))
+        monitor_thread.daemon = True
+        monitor_thread.start()
+
+        while True:
+            output = process.stdout.readline()
+            if output == "" and process.poll() is not None:
+                break
+            if output:
+                sys.stdout.write(f"\r{output.strip()}   ")  # Overwrites the current output line with subprocess stdout
+                sys.stdout.flush()
+        
+        stderr_output = process.stderr.read()
+        if stderr_output:
+            print("\nError:", stderr_output)
+
 def install_wsl(caller_script):
     script_key = "WSLInstallScriptExecuted"
     has_ran = False
@@ -61,7 +89,8 @@ def install_wsl(caller_script):
 
     """ Install WSL and set it to version 2 """
     print("Enabling Windows Subsystem for Linux (WSL) and Virtual Machine Platform...")
-    subprocess.run(["powershell", "wsl --install"], check=True)
+    #subprocess.run(["powershell", "wsl --install"], check=True)
+    enable_wsl_features()
     print("WSL installation complete. Rebooting system to finalize installation.")
 
     # Add the script to the startup registry key
@@ -279,7 +308,7 @@ def begin():
 
         if has_ran:
             remove_startup_registry_entry_wsl()
-
+    
         if has_ran or check_wsl_installed(caller_script):
             # Step 3: Install Docker Desktop if not already done
 
