@@ -7,6 +7,7 @@ import sys
 import ctypes
 import inspect
 import psutil
+import threading
 
 from yarg import get
 
