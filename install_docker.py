@@ -62,10 +62,11 @@ def enable_wsl_features():
     
     for cmd in commands:
         print(f"Executing: {cmd}")
-        process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-        print(process.stdout)
-        if process.stderr:
-            print("Error:", process.stderr)
+        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        stdout, stderr = process.communicate()
+        print(stdout)
+        if stderr:
+            print("Error:", stderr)
 
 
 
