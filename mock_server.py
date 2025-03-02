@@ -79,7 +79,7 @@ async def mock_websocket_handler(websocket):
         if data['cmd'] == 'START_PRINT':
             printing_status = {
                 'printStatus': 'PRINT_PROCESSING',
-                'sliceLayerCount': 100,
+                'sliceLayerCount': 250,
                 'curSliceLayer': 0
             }
             response = printing_status

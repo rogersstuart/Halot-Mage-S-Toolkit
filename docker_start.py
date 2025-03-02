@@ -113,7 +113,7 @@ def run_docker():
     basedir = os.path.dirname(__file__)
     print(basedir)
     host_output_dir = basedir + "\\output"
-    if(os.dirs.exists(host_output_dir)):
+    if(os.path.exists(host_output_dir)):
         shutil.rmtree(host_output_dir)
     os.makedirs(host_output_dir, exist_ok=True)
 
