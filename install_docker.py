@@ -20,6 +20,7 @@ def is_admin():
 def run_as_admin():
     """ Relaunch the script with admin privileges """
     pypath = sys.executable
+    print(pypath)
     isinstaller = True
     if pypath.endswith("pythonw.exe") or pypath.endswith("python.exe"):
         isinstaller = False

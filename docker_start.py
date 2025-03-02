@@ -7,6 +7,14 @@ import os
 IMAGE_NAME = "generate-firmware"
 DOCKERFILE_DIR = os.path.dirname(os.path.abspath(__file__))  # Directory where the Dockerfile is located
 
+def run_subprocess_in_venv(command):
+    """Run a subprocess command using the virtual environment's Python interpreter."""
+    dir_name = os.path.dirname(os.path.abspath(__file__))
+    venv_path = os.path.join(dir_name, "Scripts")
+    python_executable = os.path.join(venv_path, "python.exe") if os.name == "nt" else os.path.join(venv_path, "python")
+    full_command = [python_executable] + command
+    subprocess.run(full_command, check=True)
+
 def is_admin():
     """ Check if the script is running as an administrator """
     try:
@@ -18,6 +26,7 @@ def is_admin():
 def run_as_admin():
     """ Relaunch the script with admin privileges """
     pypath = sys.executable
+    print(pypath)
     isinstaller = True
     if pypath.endswith("pythonw.exe") or pypath.endswith("python.exe"):
         isinstaller = False
