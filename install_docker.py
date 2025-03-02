@@ -55,10 +55,9 @@ def check_wsl_installed(caller_script):
 
     return True
 
-def clear_monitor_area(lines_to_clear=1):
+def clear_monitor_area():
     """ Clears only the lines that are used by the monitor process """
-    sys.stdout.write("\033[F" * lines_to_clear)  # Move cursor up to clear lines
-    sys.stdout.write("\033[K" * lines_to_clear)  # Clear the current line
+    sys.stdout.write("\033[K")  # Clear the current line
     sys.stdout.flush()
 
 def monitor_process(proc):
@@ -84,8 +83,7 @@ def monitor_process(proc):
             
             # If the output has changed, clear previous output lines and print new output
             if output_lines != previous_output_lines:
-                lines_to_clear = len(previous_output_lines)
-                clear_monitor_area(lines_to_clear)
+                clear_monitor_area()
                 sys.stdout.write("\n".join(output_lines) + "\n")
                 sys.stdout.flush()
                 previous_output_lines = output_lines
@@ -94,7 +92,7 @@ def monitor_process(proc):
     except psutil.NoSuchProcess:
         sys.stdout.write("\n[Monitoring] Process ended.\n")
         sys.stdout.flush()
-
+        
 def enable_wsl_features():
     commands = [
         "wsl --install"
