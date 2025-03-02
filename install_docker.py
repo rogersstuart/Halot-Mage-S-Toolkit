@@ -56,8 +56,8 @@ def check_wsl_installed(caller_script):
 
 def enable_wsl_features():
     commands = [
-        "dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart",
-        "dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart"
+        "dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart /LogLevel:4",
+        "dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart /LogLevel:4"
     ]
     
     for cmd in commands:
@@ -66,6 +66,7 @@ def enable_wsl_features():
         print(process.stdout)
         if process.stderr:
             print("Error:", process.stderr)
+
 
 
 def install_wsl(caller_script):
