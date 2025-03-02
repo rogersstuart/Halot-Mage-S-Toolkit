@@ -55,29 +55,41 @@ def check_wsl_installed(caller_script):
 
     return True
 
+def clear_monitor_area(lines_to_clear=1):
+    """ Clears only the lines that are used by the monitor process """
+    sys.stdout.write("\033[F" * lines_to_clear)  # Move cursor up to clear lines
+    sys.stdout.write("\033[K" * lines_to_clear)  # Clear the current line
+    sys.stdout.flush()
+
 def monitor_process(proc):
     """ Monitor CPU, memory usage, and subprocesses of the given process """
     try:
         parent = psutil.Process(proc.pid)
+        previous_output_lines = []
+
         while proc.poll() is None:  # While process is running
             cpu_usage = parent.cpu_percent(interval=1)
             mem_usage = parent.memory_info().rss / (1024 * 1024)  # Convert to MB
             children = parent.children(recursive=True)  # Get subprocesses
             
-            child_info = []
+            output_lines = [f"[Monitoring] CPU: {cpu_usage:.2f}% | Memory: {mem_usage:.2f}MB | Subprocesses: {len(children)}"]
+            
             for child in children:
                 try:
                     child_cpu = child.cpu_percent(interval=0.1)
                     child_mem = child.memory_info().rss / (1024 * 1024)
-                    child_info.append(f"PID {child.pid}: {child.name()} (CPU: {child_cpu:.2f}%, Mem: {child_mem:.2f}MB)")
+                    output_lines.append(f"PID {child.pid}: {child.name()} (CPU: {child_cpu:.2f}%, Mem: {child_mem:.2f}MB)")
                 except psutil.NoSuchProcess:
                     continue
             
-            sys.stdout.write("\r" + " " * 100 + "\r")  # Clear previous line
-            sys.stdout.write(f"[Monitoring] CPU: {cpu_usage:.2f}% | Memory: {mem_usage:.2f}MB | Subprocesses: {len(children)}")
-            if child_info:
-                sys.stdout.write("\n" + "\n".join(child_info))
-            sys.stdout.flush()
+            # If the output has changed, clear previous output lines and print new output
+            if output_lines != previous_output_lines:
+                lines_to_clear = len(previous_output_lines)
+                clear_monitor_area(lines_to_clear)
+                sys.stdout.write("\n".join(output_lines) + "\n")
+                sys.stdout.flush()
+                previous_output_lines = output_lines
+            
             time.sleep(1)
     except psutil.NoSuchProcess:
         sys.stdout.write("\n[Monitoring] Process ended.\n")
@@ -100,8 +112,7 @@ def enable_wsl_features():
             if output == "" and process.poll() is not None:
                 break
             if output:
-                sys.stdout.write("\r" + " " * 100 + "\r")  # Clear previous line
-                sys.stdout.write(f"{output.strip()}   ")  # Overwrites previous line
+                sys.stdout.write(f"{output.strip()}\n")  # Print the command output normally
                 sys.stdout.flush()
         
         stderr_output = process.stderr.read()
