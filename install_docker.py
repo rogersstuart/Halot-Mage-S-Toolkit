@@ -72,9 +72,7 @@ def monitor_process(proc):
 
 def enable_wsl_features():
     commands = [
-        "dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart /LogLevel:4",
-        "dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart /LogLevel:4"
-        "wsl --update"
+        "wsl --install"
     ]
     
     for cmd in commands:
