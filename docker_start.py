@@ -109,7 +109,9 @@ def run_docker():
     """Run the Docker container."""
     print(f"Running Docker container: {IMAGE_NAME}...")
     
-    host_output_dir = os.path.abspath("output")
+    basedir = os.path.basename(__file__)
+    print(basedir)
+    host_output_dir = basedir + "/output"
     os.removedirs(host_output_dir)
     os.makedirs(host_output_dir, exist_ok=True)
 
