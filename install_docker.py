@@ -55,46 +55,29 @@ def check_wsl_installed(caller_script):
 
     return True
 
-def clear_monitor_area():
-    """ Clears only the lines that are used by the monitor process """
-    if os.name == 'nt':  # If running on Windows (cmd or PowerShell)
-        if sys.stdout.isatty():  # Check if output is a terminal
-            # In cmd, we can only overwrite the current line
-            sys.stdout.write("\r" + " " * 100)  # Clear the line with spaces
-            sys.stdout.write("\r")  # Move the cursor to the start of the line
-            sys.stdout.flush()
-    else:
-        sys.stdout.write("\033[K")  # For non-Windows (supports ANSI)
-        sys.stdout.flush()
-
 def monitor_process(proc):
     """ Monitor CPU, memory usage, and subprocesses of the given process """
     try:
         parent = psutil.Process(proc.pid)
-        previous_output_lines = []
-
         while proc.poll() is None:  # While process is running
             cpu_usage = parent.cpu_percent(interval=1)
             mem_usage = parent.memory_info().rss / (1024 * 1024)  # Convert to MB
             children = parent.children(recursive=True)  # Get subprocesses
             
-            output_lines = [f"[Monitoring] CPU: {cpu_usage:.2f}% | Memory: {mem_usage:.2f}MB | Subprocesses: {len(children)}"]
-            
+            child_info = []
             for child in children:
                 try:
                     child_cpu = child.cpu_percent(interval=0.1)
                     child_mem = child.memory_info().rss / (1024 * 1024)
-                    output_lines.append(f"PID {child.pid}: {child.name()} (CPU: {child_cpu:.2f}%, Mem: {child_mem:.2f}MB)")
+                    child_info.append(f"PID {child.pid}: {child.name()} (CPU: {child_cpu:.2f}%, Mem: {child_mem:.2f}MB)")
                 except psutil.NoSuchProcess:
                     continue
             
-            # If the output has changed, clear previous output lines and print new output
-            if output_lines != previous_output_lines:
-                clear_monitor_area()
-                sys.stdout.write("\n".join(output_lines) + "\n")
-                sys.stdout.flush()
-                previous_output_lines = output_lines
-            
+            sys.stdout.write("\r" + " " * 100 + "\r")  # Clear previous line
+            sys.stdout.write(f"[Monitoring] CPU: {cpu_usage:.2f}% | Memory: {mem_usage:.2f}MB | Subprocesses: {len(children)}")
+            if child_info:
+                sys.stdout.write("\n" + "\n".join(child_info))
+            sys.stdout.flush()
             time.sleep(1)
     except psutil.NoSuchProcess:
         sys.stdout.write("\n[Monitoring] Process ended.\n")
@@ -102,7 +85,8 @@ def monitor_process(proc):
 
 def enable_wsl_features():
     commands = [
-        "wsl --install"
+        "dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart /LogLevel:4",
+        "dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart /LogLevel:4"
     ]
     
     for cmd in commands:
@@ -117,7 +101,8 @@ def enable_wsl_features():
             if output == "" and process.poll() is not None:
                 break
             if output:
-                sys.stdout.write(f"{output.strip()}\n")  # Print the command output normally
+                sys.stdout.write("\r" + " " * 100 + "\r")  # Clear previous line
+                sys.stdout.write(f"{output.strip()}   ")  # Overwrites previous line
                 sys.stdout.flush()
         
         stderr_output = process.stderr.read()
