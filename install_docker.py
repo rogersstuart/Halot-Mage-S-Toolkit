@@ -57,21 +57,17 @@ def check_wsl_installed(caller_script):
 def enable_wsl_features():
     commands = [
         "dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart /LogLevel:4",
-        "dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart /LogLevel:4"
+        "dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart /LogLevel:4",
+        "wsl --update"
     ]
     
     for cmd in commands:
         print(f"Executing: {cmd}")
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        
-        # Print output line by line
-        for line in iter(process.stdout.readline, ''):
-            print(line, end='')
-
-        # Capture and print any error messages
-        stderr_output = process.stderr.read()
-        if stderr_output:
-            print("\nError:", stderr_output)
+        stdout, stderr = process.communicate()
+        print(stdout)
+        if stderr:
+            print("Error:", stderr)
 
 
 
