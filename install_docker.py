@@ -27,7 +27,6 @@ def run_as_admin():
 
     print("relaunching with admin privileges")
     script = sys.argv[0]  # Get the script name
-    print(script)
     params = " ".join(sys.argv[1:])  # Join all additional arguments
     # Run the script using PowerShell with elevated privileges
     if isinstaller:
@@ -285,6 +284,9 @@ def begin():
         run_as_admin()
         sys.exit()  # Exit the current non-elevated script after relaunching with elevated permissions
 
+    
+    print(sys.executable)
+    
     try:
         has_rebooted = False
 

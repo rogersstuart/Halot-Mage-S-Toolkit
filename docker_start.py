@@ -1,5 +1,6 @@
 import subprocess
 import sys
+from token import GREATER
 import winreg as reg
 import ctypes
 import os
@@ -105,7 +106,15 @@ def run_docker():
     print(f"Running Docker container: {IMAGE_NAME}...")
     host_output_dir = os.path.abspath("output")
     os.makedirs(host_output_dir, exist_ok=True)
-    run_command(f'docker run -v "{host_output_dir}:/app/output" -it {IMAGE_NAME}')
+
+    retries = 3
+    while retries > 0:
+        try:
+            run_command(f'docker run -v "{host_output_dir}:/app/output" -it {IMAGE_NAME}')
+            retries -= 1
+            break
+        except Exception as e:
+            print(f"An error occurred while running the Docker container: {e}")
 
 def clean_docker_system():
     """Clean up Docker system to remove unused data."""
