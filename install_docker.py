@@ -62,13 +62,6 @@ def enable_wsl_features():
     for cmd in commands:
         print(f"Executing: {cmd}")
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        
-        # Start monitoring in parallel
-        # Start monitoring process in the background
-        import threading
-        monitor_thread = threading.Thread(target=monitor_process, args=(process,))
-        monitor_thread.daemon = True
-        monitor_thread.start()
 
         while True:
             output = process.stdout.readline()
