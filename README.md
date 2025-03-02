@@ -13,3 +13,5 @@ Starting on a new PC and assuming you have virtualization enabled in your BIOS, 
   h) format quick fs=fat32
   i) exit
 4) Run ftp_serv.py to launch the appication. it will appear as a tray icon. on the first run a configuration file will be generated. input your printer IP and password.
+
+Optionally, just use the files under the releases section.
