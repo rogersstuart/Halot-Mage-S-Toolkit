@@ -108,7 +108,9 @@ def rebuild_docker():
 def run_docker():
     """Run the Docker container."""
     print(f"Running Docker container: {IMAGE_NAME}...")
+    
     host_output_dir = os.path.abspath("output")
+    os.removedirs(host_output_dir)
     os.makedirs(host_output_dir, exist_ok=True)
 
     retries = 3
