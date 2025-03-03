@@ -5,6 +5,7 @@ from token import GREATER
 import winreg as reg
 import ctypes
 import os
+import time
 
 IMAGE_NAME = "generate-firmware"
 DOCKERFILE_DIR = os.path.dirname(os.path.abspath(__file__))  # Directory where the Dockerfile is located
@@ -66,10 +67,29 @@ def run_command_output(command):
     
     return stdout.strip()
 
+def start_docker_desktop():
+    docker_desktop_path = r"C:\Program Files\Docker\Docker\Docker Desktop.exe"
+
+    if os.path.exists(docker_desktop_path):
+        print("Starting Docker Desktop...")
+        subprocess.Popen([docker_desktop_path])
+        time.sleep(30)  # Wait for Docker Desktop to start
+        print("Docker Desktop started.")
+    else:
+        print(f"Docker Desktop not found at {docker_desktop_path}")
+
 def remove_old_containers():
     """Stop and remove all containers with the specified image name."""
     print(f"Checking for existing containers with image '{IMAGE_NAME}'...")
-    all_containers = run_command_output("docker ps -a")
+    try:
+        all_containers = run_command_output("docker ps -a")
+    except Exception as e:
+        print(f"An error occurred while listing containers: {e}")
+        print("Docker probably isn't running. Starting...")
+        start_docker_desktop()
+        time.sleep(30)  # Wait for Docker Desktop to start
+        all_containers = run_command_output("docker ps -a")
+
     print(all_containers)
     container_ids = [line.split()[0] for line in all_containers.splitlines() if IMAGE_NAME in line]
 
