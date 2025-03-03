@@ -1,0 +1,17 @@
+*
+!*/
+
+!.gitignore
+!apps.tar.gz
+!create_venv.py
+!docker_start.py
+!Dockerfile
+!extract_apps.py
+!ftp_serv.py
+!generate_firmware.py
+!get_token.py
+!install_docker.py
+!requirements.txt
+!run_build.sh
+!script.py
+!mock_server.py
