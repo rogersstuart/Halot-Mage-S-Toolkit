@@ -1,5 +1,3 @@
-Starting on a new PC and assuming you have virtualization enabled in your BIOS, you have python installed, and you know how to use git:
-
 1) Run create_venv.py
 2) Run generate_firmware.py
 3) Copy output/firmware/ChituUpgrade.bin onto a flash drive with a MBR partition table and 1GB partition.
