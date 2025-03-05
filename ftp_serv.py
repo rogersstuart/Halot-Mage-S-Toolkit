@@ -548,7 +548,7 @@ def main():
     global token
     token = ""
 
-    token = get_token.get_token()
+    token = get_token.get_token(config['printer']['password'])
     config['printer']['token'] = token
     with open("config.toml", "w") as f:
         toml.dump(config, f)
