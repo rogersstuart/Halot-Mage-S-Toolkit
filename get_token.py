@@ -10,7 +10,7 @@ def download_js_library(url):
     response = requests.get(url)
     return response.text
 
-def get_token():
+def get_token(password):
     # Download the JavaScript libraries
     pako_code = download_js_library(pako_url)
     crypto_js_code = download_js_library(crypto_js_url)
@@ -22,7 +22,7 @@ def get_token():
    function generateToken() {{
         var key = CryptoJS.enc.Hex.parse("6138356539643638");
 
-        var password = "0";
+        var password = "{password}";
         var encrypted = CryptoJS.DES.encrypt(password, key, {{
             mode: CryptoJS.mode.ECB,
             padding: CryptoJS.pad.Pkcs7

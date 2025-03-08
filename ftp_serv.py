@@ -484,7 +484,7 @@ def file_added_callback(file_path):
             print(listout[i])
             ftp.delete(listout[i])
 
-    uploadTracker = FtpUploadTracker(int(os.path.getsize(file_path)))
+    uploadTracker = FtpUploadTracker(int(os.path.getsize(os.path.join('./ftp', os.path.split(file_path)[1]))))
     window.setSignal(uploadTracker.update_signal)
     window.show_window()
     ftp.storbinary(f'STOR {os.path.split(file_path)[1]}', open(file_path, 'rb'), 1024, uploadTracker.handle)
