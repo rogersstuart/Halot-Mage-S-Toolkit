@@ -35,6 +35,7 @@ import docker_start
 import get_token
 import install_docker
 import mock_server
+import shutil
 
 class FtpUploadTracker(QThread):
     totalSize = 0
@@ -44,8 +45,8 @@ class FtpUploadTracker(QThread):
     
     def __init__(self, totalSize):
         super().__init__()
-        self.totalSize = round(totalSize/1000000, 2)
         self.progress_output = io.StringIO()
+        self.totalSize = round(totalSize/1000000, 2)
         self.progress_output.truncate(0)
         self.progress_output.seek(0)
         self.progress_bar = tqdm(bar_format = '{desc}: {percentage:3.2f}%|{bar}| {n:.2f}/{total:.2f} [{elapsed}<{remaining}, {rate_fmt}]',
@@ -57,9 +58,15 @@ class FtpUploadTracker(QThread):
         self.handle(0)
 
     def handle(self, block):
-        self.progress_bar.update(1024/1000000)
-        self.update_signal.emit(self.progress_output.getvalue())
-        self.progress_output.seek(0)
+        try:
+            self.progress_bar.update(8192/1000000)
+            self.update_signal.emit(self.progress_output.getvalue())
+            self.progress_output.seek(0)
+        except Exception as e:
+            print(e)
+
+    def getSignal(self):
+        return self.update_signal
 
 class PrintTracker(QThread):
     totalSize = 0
@@ -69,8 +76,8 @@ class PrintTracker(QThread):
     
     def __init__(self, totalSize):
         super().__init__()
-        self.totalSize = totalSize
         self.progress_output = io.StringIO()
+        self.totalSize = totalSize
         self.progress_output.truncate(0)
         self.progress_output.seek(0)
         self.progress_bar = tqdm(bar_format = '{desc}: {percentage:3.2f}%|{bar}| {n:.2f}/{total:.2f} [{elapsed}<{remaining}, {rate_fmt}]',
@@ -89,6 +96,9 @@ class PrintTracker(QThread):
         self.update_signal.emit(self.progress_output.getvalue())
         self.progress_output.seek(0)
         self.progress_output.truncate(0)
+
+    def getSignal(self):
+        return self.update_signal
         
         
 
@@ -164,6 +174,7 @@ async def start_print2():
         if listout.__len__() > 0:
             dict2 = {'cmd':'START_PRINT', 'token':config['printer']['token'],'filename': listout[0]}
             out = json.dumps(dict2)
+            print(out)
             await websocket.send(out)
             await websocket.recv()
         else:
@@ -316,6 +327,7 @@ def background_task():
 
 # Main Window Class
 class MainWindow(QMainWindow):
+    
     def __init__(self):
         super().__init__()
 
@@ -382,8 +394,9 @@ class MainWindow(QMainWindow):
 
     def update_text(self, text):
         """Updates the QTextEdit with the progress information."""
+
+        #print("updating text " + text)
         
-        print("updating text " + text)
         QMetaObject.invokeMethod(self.text_edit, "setText", Qt.QueuedConnection, Q_ARG(str, text))
         #self.text_edit.setText(text)  # Overwrite the text each time with new progress
         
@@ -409,9 +422,6 @@ class MainWindow(QMainWindow):
     def adjust_window_size(self, text):
         """Adjust the window size based on the number of characters and the width of a single character."""
         # Get the font metrics of the text edit widget
-        
-        print("hello")
-        
         font_metrics = self.text_edit.fontMetrics()
 
         # Calculate the width of a single character
@@ -472,7 +482,9 @@ class FileCreatedHandler(FileSystemEventHandler):
 
     def on_created(self, event):
         if not event.is_directory:
+            print(event.src_path)
             self.callback(event.src_path)
+            
 
 def file_added_callback(file_path):
     ftp = FTP(printer_ip)
@@ -484,15 +496,31 @@ def file_added_callback(file_path):
             print(listout[i])
             ftp.delete(listout[i])
 
-    uploadTracker = FtpUploadTracker(int(os.path.getsize(os.path.join('./ftp', os.path.split(file_path)[1]))))
-    window.setSignal(uploadTracker.update_signal)
+    formatted_path = os.path.abspath(file_path)
+    if not os.path.exists(formatted_path):
+        print(f"File not found: {formatted_path}")
+        return
+
+    uploadTracker = FtpUploadTracker(int(os.path.getsize(formatted_path)))
+    window.setSignal(uploadTracker.getSignal())
     window.show_window()
-    ftp.storbinary(f'STOR {os.path.split(file_path)[1]}', open(file_path, 'rb'), 1024, uploadTracker.handle)
+
+    ftp.storbinary(f'STOR {os.path.split(file_path)[1]}', open(file_path, 'rb'), 8192, uploadTracker.handle)
 
     window.hide_window()
 
     ftp.quit()
-    os.remove(file_path)
+
+    dir_path = os.path.dirname(file_path)
+    for filename in os.listdir(dir_path):
+        file_path = os.path.join(dir_path, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)  # Remove the file or link
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)  # Remove the directory and its contents
+        except Exception as e:
+            print(f"Failed to delete {file_path}. Reason: {e}")
 
     print("File received")
 
@@ -561,8 +589,8 @@ def main():
         os.makedirs('./ftp')
 
     if config['watchdog']['enable'] == True:
-        directory_to_watch = './ftp' # Replace with the directory you want to watch
-        start_watching(directory_to_watch)
+        directory_to_watch = os.path.join('.','ftp') # Replace with the directory you want to watch
+        start_watching(os.path.abspath(directory_to_watch))
     elif config['ftp_server']['enable'] == False:
         sys.exit(0)
     
